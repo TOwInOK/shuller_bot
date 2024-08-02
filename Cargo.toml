@@ -1,0 +1,15 @@
+[package]
+name = "shuller_bot"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+dotenv = "0.15.0"
+dotenv_codegen = "0.15.0"
+poise = "0.6.1"
+rand = "0.8.5"
+serenity = { version = "0.12.2", features = ["tokio_task_builder"] }
+shuller = { version = "2.0.2", features = ["full"] }
+time = "0.3.36"
+tokio = { version = "1.39.2", features = ["full"] }
+url = "2.5.2"
