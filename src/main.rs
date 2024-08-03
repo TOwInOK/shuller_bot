@@ -88,8 +88,13 @@ async fn send_images_by_tags(
     if posts.is_empty() {
         return Err("**Error: Nothing found**, try to cum on any tags!".into());
     }
+    use rand::seq::SliceRandom;
     if let Some(size) = size {
-        ctx.say(posts[0..size].join(" ")).await?;
+        let rng = &mut ctx.data().rng.lock().await.to_owned();
+        let posts: Vec<&&str> = posts.choose_multiple(rng, size).collect();
+        let posts: Vec<&str> = posts.iter().map(|x| **x).collect();
+
+        ctx.say(posts.join(" ")).await?;
     } else {
         let image = get_from_vec(ctx, &posts).await?;
         ctx.say(image).await?;
