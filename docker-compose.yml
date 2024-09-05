@@ -2,6 +2,6 @@ version: '3.8'
 
 services:
   shuller_bot:
-    image: shuller_bot:latest
+    image: ghcr.io/towinok/shuller_bot:latest
     environment:
       - DS_TOKEN=YOUR_TOKEN
