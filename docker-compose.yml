@@ -4,4 +4,4 @@ services:
   shuller_bot:
     image: shuller_bot:latest
     environment:
-      - DS_TOCKEN=YOUR_TOKEN
+      - DS_TOKEN=YOUR_TOKEN

@@ -20,7 +20,7 @@ type Error = Box<dyn std::error::Error + Send + Sync>;
 
 #[tokio::main]
 async fn main() {
-    let token = std::env::var("DS_TOCKEN").expect("missing DISCORD_TOKEN");
+    let token = std::env::var("DS_TOKEN").expect("missing DISCORD_TOKEN");
     tracing::subscriber::set_global_default(
         FmtSubscriber::builder()
             .with_max_level(Level::INFO)
