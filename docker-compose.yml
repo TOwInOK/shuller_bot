@@ -1,0 +1,7 @@
+version: '3.8'
+
+services:
+  shuller_bot:
+    image: shuller_bot:latest
+    environment:
+      - DS_TOCKEN=YOUR_TOKEN

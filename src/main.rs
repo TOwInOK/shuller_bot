@@ -51,8 +51,15 @@ async fn main() {
             name: "Проповедничает Shuller".to_string(),
             kind: serenity::ActivityType::Custom,
             state: Some("Едет в kfc, жарить кур".to_string()),
-            url: Some(Url::parse("https://crates.io/crates/shuller").unwrap()),
+            url: Some(
+                Url::parse("https://crates.io/crates/shuller")
+                    .expect("Fail to build url for activity"),
+            ),
         })
         .await;
-    client.unwrap().start_autosharded().await.unwrap();
+    client
+        .expect("Fail to build client")
+        .start_autosharded()
+        .await
+        .expect("Fail to build client");
 }
