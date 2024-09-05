@@ -4,8 +4,6 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-dotenv = "0.15.0"
-dotenv_codegen = "0.15.0"
 poise = "0.6.1"
 serenity = { version = "0.12.2", features = ["tokio_task_builder"] }
 shuller = { version = "2.0.6", features = ["full"] }

@@ -79,8 +79,8 @@ pub async fn porno(
     }
     paginate::paginate(
         ctx,
-        if posts.len() == 3 {
-            &posts[..3]
+        if posts.len() < 4 {
+            &posts[..posts.len()]
         } else {
             &posts[..4]
         },
