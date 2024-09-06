@@ -12,3 +12,21 @@ This bot can find some cool images from rule34 by your reqwest!
 <img width="880"  src="https://github.com/user-attachments/assets/82d596ac-af43-472a-8ab7-a8cb8fb96aa8">
 <img width="1015"  src="https://github.com/user-attachments/assets/e011d2c4-a377-47c5-8098-83cb52005b2b">
 <img src="https://github.com/user-attachments/assets/cf0f7614-baa7-410b-9842-3ed7150fe7c8">
+
+# Docker
+```sh
+docker run -d \
+  -e DS_TOKEN=YOUR_TOKEN \
+  ghcr.io/towinok/shuller_bot:latest
+```
+
+# Docker-compose
+```yml
+version: '3.8'
+
+services:
+  shuller_bot:
+    image: ghcr.io/towinok/shuller_bot:latest
+    environment:
+      - DS_TOKEN=YOUR_TOKEN
+```
