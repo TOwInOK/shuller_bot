@@ -53,8 +53,10 @@ pub async fn porno(
             &positive_tags, &negative_tags
         );
         let a = R34!(D;
-            p = positive_tags.unwrap_or_default().split(" ").collect(),
-                n = negative_tags.unwrap_or_default().split(" ").collect(),
+            p = positive_tags.unwrap_or("".to_string()).split_whitespace().collect(),
+            // p = ["ai_generated"].to_vec(),
+                n = negative_tags.unwrap_or("".to_string()).split_whitespace().collect(),
+                // n = [].to_vec(),
                 limit = LEN_MAX as u16
         );
         match a {
@@ -62,7 +64,7 @@ pub async fn porno(
                 let mut a = r.shuffle().data();
                 posts.append(&mut a);
             }
-            Err(_) => return Err("**Error: Posts** not found".into()),
+            Err(e) => return Err(format!("**Error: Posts** not found\nErr{}", e).into()),
         }
     } else {
         info!("Nothing addition params found");
