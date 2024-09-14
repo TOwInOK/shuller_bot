@@ -11,28 +11,28 @@ static LEN_MAX: usize = 30;
     guild_only,
     nsfw_only,
     description_localized("ru", "Получить дозу эмоций"),
-    // name_localized("ru", "порно"),
+    name_localized("ru", "порно"),
     ephemeral
 )]
 pub async fn porno(
     ctx: Context<'_>,
     #[description = "let me your favorite tags!"]
     #[description_localized("ru", "Дай мне свои любимые теги")]
-    // #[name_localized("ru", "позитивные теги")]
+    #[name_localized("ru", "позитивные_теги")]
     // #[name_localized("us", "positive tags")]
     positive_tags: Option<String>,
     #[description = "let me your unfavorite tags!"]
     #[description_localized("ru", "Что не нравится?")]
-    // #[name_localized("ru", "негативные теги")]
+    #[name_localized("ru", "негативные_теги")]
     // #[name_localized("us", "negative tags")]
     negative_tags: Option<String>,
-    #[description = "Do you wana some special?!"]
+    #[description = "Do you wanna some special?!"]
     #[description_localized("ru", "Позвони и узнай, как там с деньгами!")]
-    // #[name_localized("ru", "пробив по номеру")]
+    #[name_localized("ru", "пробив_по_номеру")]
     id: Option<usize>,
     #[description = "How many do you want?"]
     #[description_localized("ru", "Сколько выдать?")]
-    // #[name_localized("ru", "количество")]
+    #[name_localized("ru", "количество")]
     size: Option<usize>,
 ) -> Result<(), Error> {
     let mut posts = vec![];
@@ -68,11 +68,14 @@ pub async fn porno(
         }
     } else {
         info!("Nothing addition params found");
-        for _ in 0..size {
-            match R34!(R; D) {
-                Ok(data) => posts.push(data.data()[0].clone()),
-                Err(_) => continue,
-            }
+        match shuller::rules::rule34::params::R34Params::init()
+            .page(random_usize!(u16::MAX as usize) as u16)
+            .limit(size as u16)
+            .download()
+            .await
+        {
+            Ok(data) => posts.append(&mut data.data()),
+            Err(_) => return Err("**Error: Posts** not found".into()),
         }
     }
 

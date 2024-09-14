@@ -2,7 +2,7 @@ use crate::{Context, Error};
 use poise::{serenity_prelude as serenity, CreateReply};
 
 /// Boop the bot!
-#[poise::command(prefix_command, track_edits, slash_command)]
+#[poise::command(prefix_command, track_edits, slash_command, nsfw_only)]
 pub async fn boop(ctx: Context<'_>) -> Result<(), Error> {
     let uuid_boop = ctx.id();
 
