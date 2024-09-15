@@ -2,7 +2,7 @@ use crate::{phrazes::PHRASES, Context};
 use ::serenity::all::{CreateMessage, ReactionType};
 use poise::{serenity_prelude as serenity, CreateReply};
 use shuller::{prelude::Post, random_usize};
-use tracing::info;
+use tracing::debug;
 
 pub async fn paginate(ctx: Context<'_>, posts: &[Post]) -> Result<(), crate::Error> {
     let ctx_id = ctx.id();
@@ -35,9 +35,8 @@ pub async fn paginate(ctx: Context<'_>, posts: &[Post]) -> Result<(), crate::Err
         );
         vec
     };
-
     let post = |page: &usize, shared: bool| {
-        info!("page is: {:#?}", &posts[*page]);
+        debug!("page is: {:#?}", &posts[*page]);
         match shared {
             true => serenity::CreateEmbed::default()
                 .image(&posts[*page].sample_url)
@@ -49,9 +48,19 @@ pub async fn paginate(ctx: Context<'_>, posts: &[Post]) -> Result<(), crate::Err
                     random_usize!(255) as u8,
                 ))
                 .description(format!(
-                    "**Tags:**
-            {}",
-                    &posts[*page].tags
+                    "
+                    [Post](https://rule34.xxx/index.php?page=post&s=view&id={})
+                    [Tag Link](https://rule34.xxx/index.php?page=post&s=list&tags={})
+                    **Tags:**
+                    ```{}```
+                    ",
+                    &posts[*page].id,
+                    &posts[*page]
+                        .tags
+                        .split_whitespace()
+                        .collect::<Vec<&str>>()
+                        .join("+"),
+                    &posts[*page].tags,
                 ))
                 .author(serenity::CreateEmbedAuthor::new(&posts[*page].owner))
                 .footer(
@@ -68,9 +77,19 @@ pub async fn paginate(ctx: Context<'_>, posts: &[Post]) -> Result<(), crate::Err
                     random_usize!(255) as u8,
                 ))
                 .description(format!(
-                    "**Tags:**
-            {}",
-                    &posts[*page].tags
+                    "
+                    [Post](https://rule34.xxx/index.php?page=post&s=view&id={})
+                    [Tag Link](https://rule34.xxx/index.php?page=post&s=list&tags={})
+                    **Tags:**
+                    ```{}```
+                    ",
+                    &posts[*page].id,
+                    &posts[*page]
+                        .tags
+                        .split_whitespace()
+                        .collect::<Vec<&str>>()
+                        .join("+"),
+                    &posts[*page].tags,
                 ))
                 .author(serenity::CreateEmbedAuthor::new(&posts[*page].owner)),
         }

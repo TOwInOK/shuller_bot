@@ -1,6 +1,6 @@
 use crate::{paginate, Context, Error};
 use shuller::prelude::*;
-use tracing::info;
+use tracing::debug;
 
 static LEN: usize = 4;
 static LEN_MAX: usize = 30;
@@ -19,12 +19,10 @@ pub async fn porno(
     #[description = "let me your favorite tags!"]
     #[description_localized("ru", "Дай мне свои любимые теги")]
     #[name_localized("ru", "позитивные_теги")]
-    // #[name_localized("us", "positive tags")]
     positive_tags: Option<String>,
     #[description = "let me your unfavorite tags!"]
     #[description_localized("ru", "Что не нравится?")]
     #[name_localized("ru", "негативные_теги")]
-    // #[name_localized("us", "negative tags")]
     negative_tags: Option<String>,
     #[description = "Do you wanna some special?!"]
     #[description_localized("ru", "Позвони и узнай, как там с деньгами!")]
@@ -41,14 +39,14 @@ pub async fn porno(
         return Err("**Error: TOOO BIG**, max size is 4".into());
     }
     if let Some(id) = id {
-        info!("found some id: {}", &id);
+        debug!("found some id: {}", &id);
         let mut data = match R34!(D; id = id) {
             Ok(e) => e.data(),
             Err(_) => return Err("**Error: Posts** not found".into()),
         };
         posts.append(&mut data);
     } else if positive_tags.is_some() || negative_tags.is_some() {
-        info!(
+        debug!(
             "found some tags: p = {:#?}, n = {:#?}",
             &positive_tags, &negative_tags
         );
@@ -67,7 +65,7 @@ pub async fn porno(
             Err(e) => return Err(format!("**Error: Posts** not found\nErr{}", e).into()),
         }
     } else {
-        info!("Nothing addition params found");
+        debug!("Nothing addition params found");
         match shuller::rules::rule34::params::R34Params::init()
             .page(random_usize!(u16::MAX as usize) as u16)
             .limit(size as u16)
