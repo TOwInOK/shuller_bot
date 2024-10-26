@@ -53,19 +53,23 @@ pub async fn generate(
     categorie: &Categories,
     ctx: &Context<'_>,
 ) -> Result<Vec<CreateEmbed>, anime_grubber::error::Error> {
-    let categorie_str = std::convert::Into::<&str>::into(categorie);
+    let categorie_str = format!(
+        "{}: {}",
+        std::convert::Into::<&str>::into(categorie),
+        categorie.deepest_str()
+    );
     let user = ctx.author().name.as_str();
     let user_avatar = ctx.author().avatar_url().unwrap_or_default();
     if !many {
         let image = fetch(categorie).await?;
         Ok(vec![
-            generate_post(&image, user, &user_avatar, categorie_str).await?,
+            generate_post(&image, user, &user_avatar, &categorie_str).await?,
         ])
     } else {
         let mut vec = vec![];
         let images = fetch_many(categorie.clone()).await?;
         for url in images.iter().take(3) {
-            vec.push(generate_post(url, user, &user_avatar, categorie_str).await?)
+            vec.push(generate_post(url, user, &user_avatar, &categorie_str).await?)
         }
         Ok(vec)
     }

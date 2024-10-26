@@ -12,11 +12,15 @@ ENV CARGO_HTTP_MULTIPLEXING=false
 # Первый этап - Подготовка рецепта
 FROM base AS planner
 WORKDIR /app
-COPY Cargo.toml Cargo.lock ./
-# Создаем пустую main.rs чтобы cargo chef мог проанализировать зависимости
+# Копируем только Cargo.toml
+COPY Cargo.toml ./
+# Создаем пустую структуру проекта
 RUN mkdir src && \
-    echo "fn main() {}" > src/main.rs
-RUN cargo chef prepare --recipe-path recipe.json
+    echo "fn main() {}" > src/main.rs && \
+    # Создаем Cargo.lock
+    cargo generate-lockfile && \
+    # Подготавливаем рецепт
+    cargo chef prepare --recipe-path recipe.json
 
 # Второй этап - Сборка зависимостей
 FROM base AS cacher
@@ -24,7 +28,6 @@ WORKDIR /app
 COPY --from=planner /app/recipe.json recipe.json
 # Собираем только зависимости
 RUN --mount=type=cache,target=/usr/local/cargo/registry \
-    --mount=type=cache,target=/usr/local/cargo/git \
     cargo chef cook --release --recipe-path recipe.json
 
 # Третий этап - Финальная сборка
@@ -33,12 +36,10 @@ WORKDIR /app
 # Копируем собранные зависимости
 COPY --from=cacher /app/target target
 COPY --from=cacher /usr/local/cargo/registry /usr/local/cargo/registry
-COPY --from=cacher /usr/local/cargo/git /usr/local/cargo/git
 # Копируем исходный код
 COPY . .
 # Собираем только наш код
 RUN --mount=type=cache,target=/usr/local/cargo/registry \
-    --mount=type=cache,target=/usr/local/cargo/git \
     cargo build --release --offline
 
 # Финальный образ
