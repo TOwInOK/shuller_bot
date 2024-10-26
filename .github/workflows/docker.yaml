@@ -115,6 +115,9 @@ jobs:
   deploy:
     needs: docker-build
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
     env:
       REGISTRY: ghcr.io
       CONTAINER_NAME: lum # Имя контейнера на сервере
@@ -123,13 +126,30 @@ jobs:
       - name: Downcase REPO
         run: |
           echo "IMAGE_NAME=${GITHUB_REPOSITORY,,}" >>${GITHUB_ENV}
-
+      - name: Check secrets
+        run: |
+          if [ -z "${{ secrets.SERVER_IP }}" ]; then
+            echo "SERVER_IP is missing"
+            exit 1
+          fi
+          if [ -z "${{ secrets.SERVER_USERNAME }}" ]; then
+            echo "SERVER_USERNAME is missing"
+            exit 1
+          fi
+          if [ -z "${{ secrets.SERVER_PASSWORD }}" ]; then
+            echo "SERVER_PASSWORD is missing"
+            exit 1
+          fi
+          echo "All required secrets are present"
       - name: Deploy to Server
         uses: appleboy/ssh-action@v1.0.0
         with:
           host: ${{ secrets.SERVER_IP }}
           username: ${{ secrets.SERVER_USERNAME }}
           password: ${{ secrets.SERVER_PASSWORD }}
+          port: 22
+          debug: true
+          timeout: 30s
           script: |
             # Логин в GitHub Container Registry
             echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
