@@ -135,7 +135,7 @@ jobs:
       packages: write
     env:
       REGISTRY: ghcr.io
-      CONTAINER_NAME: lum # Имя контейнера на сервере
+      CONTAINER_NAME: lum
 
     steps:
       - name: Downcase REPO
@@ -143,7 +143,7 @@ jobs:
           echo "IMAGE_NAME=${GITHUB_REPOSITORY,,}" >>${GITHUB_ENV}
       - name: Check secrets
         run: |
-          if [ -z "${{ secrets.SERVER_IP }}" ]; then
+          if [ -z "${{ secrets.IP }}" ]; then
             echo "SERVER_IP is missing"
             exit 1
           fi
