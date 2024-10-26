@@ -28,6 +28,7 @@ WORKDIR /app
 COPY --from=planner /app/recipe.json recipe.json
 # Собираем только зависимости
 RUN --mount=type=cache,target=/usr/local/cargo/registry \
+    --mount=type=cache,target=/usr/local/cargo/git \
     cargo chef cook --release --recipe-path recipe.json
 
 # Третий этап - Финальная сборка
@@ -38,9 +39,10 @@ COPY --from=cacher /app/target target
 COPY --from=cacher /usr/local/cargo/registry /usr/local/cargo/registry
 # Копируем исходный код
 COPY . .
-# Собираем только наш код
+# Собираем наш код
 RUN --mount=type=cache,target=/usr/local/cargo/registry \
-    cargo build --release --offline
+    --mount=type=cache,target=/usr/local/cargo/git \
+    cargo build --release
 
 # Финальный образ
 FROM alpine:latest
