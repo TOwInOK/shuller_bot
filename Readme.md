@@ -22,8 +22,6 @@ docker run -d \
 
 # Docker-compose
 ```yml
-version: '3.8'
-
 services:
   shuller_bot:
     image: ghcr.io/towinok/shuller_bot:latest
