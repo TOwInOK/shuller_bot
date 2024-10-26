@@ -5,6 +5,21 @@ on:
     branches:
       - main
   workflow_dispatch:
+    inputs:
+      environment:
+        description: "Environment to deploy to"
+        required: true
+        default: "production"
+        type: choice
+        options:
+          - production
+          - staging
+          - development
+      debug_enabled:
+        description: "Run the deployment with debug logging"
+        required: false
+        type: boolean
+        default: false
 
 jobs:
   rust-checks:
