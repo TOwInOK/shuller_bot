@@ -183,5 +183,5 @@ pub async fn waifu_nsfw(
     };
     let categorie = Categories::NSFW(nsfw_type);
     let embeds = generate(many.unwrap_or_default(), &categorie, &ctx).await?;
-    paginate(ctx, &embeds, categorie, true).await
+    paginate(ctx, &embeds, categorie, false).await
 }
