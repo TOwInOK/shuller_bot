@@ -51,16 +51,6 @@ jobs:
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
-        with:
-          buildkitd-flags: --debug
-
-      - name: Cache Docker layers
-        uses: actions/cache@v3
-        with:
-          path: /tmp/.buildx-cache
-          key: ${{ runner.os }}-buildx-${{ github.sha }}
-          restore-keys: |
-            ${{ runner.os }}-buildx-
 
       - name: Login to Container Registry
         uses: docker/login-action@v3
@@ -76,7 +66,7 @@ jobs:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
             type=raw,value=latest
-            type=sha,prefix=sha-
+            type=sha,format=short
           labels: |
             org.opencontainers.image.title=Shuller Bot
             org.opencontainers.image.description=Discord Bot
@@ -84,25 +74,17 @@ jobs:
             maintainer=towinok
 
       - name: Build and push
-        id: docker_build
         uses: docker/build-push-action@v5
         with:
           context: .
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=local,src=/tmp/.buildx-cache
-          cache-to: type=local,dest=/tmp/.buildx-cache-new,mode=max
           platforms: linux/amd64
-          provenance: false
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
-      - name: Move cache
-        if: always()
-        run: |
-          rm -rf /tmp/.buildx-cache
-          mv /tmp/.buildx-cache-new /tmp/.buildx-cache
-
-      - name: Check image size
+      - name: Check image
         if: success()
         run: |
           docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
