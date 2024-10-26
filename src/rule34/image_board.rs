@@ -1,11 +1,14 @@
-use crate::{paginate, Context, Error};
+use crate::{rule34::paginate, Context, Error};
 use shuller::prelude::*;
 use tracing::debug;
 
 static LEN: usize = 4;
 static LEN_MAX: usize = 30;
 
-/// Get your loved pngs
+/// R34
+/// Video => animated & sound, to positive tags
+/// Gif => gif, to positive tags
+/// Img => any stuff
 #[poise::command(
     slash_command,
     guild_only,
@@ -33,6 +36,7 @@ pub async fn porno(
     #[name_localized("ru", "количество")]
     size: Option<usize>,
 ) -> Result<(), Error> {
+    ctx.defer().await?;
     let mut posts = vec![];
     let size = size.unwrap_or(3);
     if size > LEN {

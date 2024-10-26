@@ -1,4 +1,4 @@
-pub const PHRASES: [&str; 1690] = [
+pub static PHRASES: [&str; 1690] = [
     "Look at full picture!",
     "Be honor, check this!",
     "Ohhh, that what I'm wating for",
