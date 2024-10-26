@@ -1,14 +1,24 @@
 ARG TARGETARCH
 FROM alpine:latest AS base
 
-# Установка только необходимых зависимостей
-RUN apk add --no-cache musl-dev openssl-dev pkgconfig curl gcc \
+RUN apk add --no-cache \
+    musl-dev \
+    openssl-dev \
+    openssl-libs-static \
+    pkgconfig \
+    curl \
+    gcc \
+    make \
+    perl \
     && curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --profile minimal --default-toolchain stable \
     && ~/.cargo/bin/cargo install cargo-chef --locked --version 0.1.68
 
 ENV PATH="/root/.cargo/bin:${PATH}"
 ENV CARGO_NET_GIT_FETCH_WITH_CLI=true
 ENV CARGO_HTTP_MULTIPLEXING=false
+
+ENV OPENSSL_STATIC=1
+ENV OPENSSL_DIR=/usr
 
 # Первый этап - Подготовка рецепта
 FROM base AS planner
