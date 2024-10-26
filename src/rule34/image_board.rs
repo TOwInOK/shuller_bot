@@ -15,6 +15,7 @@ static LEN_MAX: usize = 30;
     nsfw_only,
     description_localized("ru", "Получить дозу эмоций"),
     name_localized("ru", "порно"),
+    category = "NSFW",
     ephemeral
 )]
 pub async fn porno(
