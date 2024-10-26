@@ -46,6 +46,7 @@ jobs:
 
       - name: Run Clippy
         run: cargo clippy -- -D warnings
+
   docker-build:
     needs: rust-checks
     runs-on: ubuntu-latest
@@ -65,8 +66,6 @@ jobs:
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
-        with:
-          buildkitd-flags: --debug
 
       - name: Login to Container Registry
         uses: docker/login-action@v3
@@ -74,15 +73,6 @@ jobs:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-
-      # Restore cache
-      - name: Cache Docker layers
-        uses: actions/cache@v3
-        with:
-          path: /tmp/.buildx-cache
-          key: ${{ runner.os }}-buildx-${{ github.sha }}
-          restore-keys: |
-            ${{ runner.os }}-buildx-
 
       - name: Generate Docker metadata
         id: meta
@@ -93,12 +83,12 @@ jobs:
             type=raw,value=latest
             type=sha,format=short
           labels: |
-            org.opencontainers.image.title=Shuller Bot
-            org.opencontainers.image.description=Discord Bot
+            org.opencontainers.image.title=luuma
+            org.opencontainers.image.description=Anime picture fetcher bot
             org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
             maintainer=towinok
 
-      - name: Build and push
+      - name: Build and push Docker image
         uses: docker/build-push-action@v5
         with:
           context: .
@@ -106,27 +96,14 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           platforms: linux/amd64
-          cache-from: |
-            type=local,src=/tmp/.buildx-cache
-            type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache
-          cache-to: |
-            type=local,dest=/tmp/.buildx-cache-new,mode=max
-            type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache,mode=max
-          outputs: |
-            type=image,name=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache
+          cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache,mode=max
 
-      # Временный фикс для кэша
-      - name: Move cache
-        if: always()
-        run: |
-          rm -rf /tmp/.buildx-cache
-          mv /tmp/.buildx-cache-new /tmp/.buildx-cache
-
-      - name: Check image
+      - name: Verify Docker image
         if: success()
         run: |
           docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
-          docker image ls ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+          docker image inspect ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
   # deploy:
   #   needs: docker-build
   #   runs-on: ubuntu-latest
