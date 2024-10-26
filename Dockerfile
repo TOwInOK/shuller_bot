@@ -1,41 +1,47 @@
 FROM rust:alpine AS base
 
-# Устанавливаем необходимые зависимости и cargo-chef
+# Установка только cargo-chef
 RUN apk add --no-cache musl-dev openssl-dev \
     && cargo install cargo-chef
 
-# Настройка переменных окружения для оптимизации
+# Оптимизации для cargo
 ENV RUSTFLAGS="-C target-feature=-crt-static -C opt-level=3 -C target-cpu=native -C link-arg=-s"
 ENV CARGO_NET_GIT_FETCH_WITH_CLI=true
 ENV CARGO_HTTP_MULTIPLEXING=false
-ENV CARGO_INCREMENTAL=0
-ENV CARGO_PROFILE_RELEASE_LTO=true
-ENV CARGO_PROFILE_RELEASE_CODEGEN_UNITS=1
 
+# Первый этап - Подготовка рецепта
 FROM base AS planner
 WORKDIR /app
-COPY . .
-RUN --mount=type=cache,target=/usr/local/cargo/registry \
-    --mount=type=cache,target=/usr/local/cargo/git \
-    cargo chef prepare --recipe-path recipe.json
+COPY Cargo.toml Cargo.lock ./
+# Создаем пустую main.rs чтобы cargo chef мог проанализировать зависимости
+RUN mkdir src && \
+    echo "fn main() {}" > src/main.rs
+RUN cargo chef prepare --recipe-path recipe.json
 
-FROM base AS builder
+# Второй этап - Сборка зависимостей
+FROM base AS cacher
 WORKDIR /app
 COPY --from=planner /app/recipe.json recipe.json
-
-ARG CARGO_BUILD_JOBS=4
-
-# Сборка зависимостей
+# Собираем только зависимости
 RUN --mount=type=cache,target=/usr/local/cargo/registry \
     --mount=type=cache,target=/usr/local/cargo/git \
     cargo chef cook --release --recipe-path recipe.json
 
+# Третий этап - Финальная сборка
+FROM base AS builder
+WORKDIR /app
+# Копируем собранные зависимости
+COPY --from=cacher /app/target target
+COPY --from=cacher /usr/local/cargo/registry /usr/local/cargo/registry
+COPY --from=cacher /usr/local/cargo/git /usr/local/cargo/git
+# Копируем исходный код
 COPY . .
-# Финальная сборка
+# Собираем только наш код
 RUN --mount=type=cache,target=/usr/local/cargo/registry \
     --mount=type=cache,target=/usr/local/cargo/git \
-    cargo build --release --jobs ${CARGO_BUILD_JOBS}
+    cargo build --release --offline
 
+# Финальный образ
 FROM alpine:latest
 WORKDIR /app
 
