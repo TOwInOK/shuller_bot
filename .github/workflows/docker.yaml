@@ -40,7 +40,7 @@ jobs:
       packages: write
     env:
       REGISTRY: ghcr.io
-      IMAGE_NAME: ${{ github.repository }}
+      IMAGE_NAME: ${{ toLowerCase(github.repository) }}
 
     steps:
       - name: Checkout
