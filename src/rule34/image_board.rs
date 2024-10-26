@@ -36,7 +36,7 @@ pub async fn porno(
     #[name_localized("ru", "количество")]
     size: Option<usize>,
 ) -> Result<(), Error> {
-    ctx.defer().await?;
+    ctx.defer_ephemeral().await?;
     let mut posts = vec![];
     let size = size.unwrap_or(3);
     if size > LEN {
