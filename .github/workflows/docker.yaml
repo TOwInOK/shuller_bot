@@ -31,7 +31,6 @@ jobs:
 
       - name: Run Clippy
         run: cargo clippy -- -D warnings
-
   docker-build:
     needs: rust-checks
     runs-on: ubuntu-latest
@@ -113,3 +112,60 @@ jobs:
         run: |
           docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
           docker image ls ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+  deploy:
+    needs: docker-build
+    runs-on: ubuntu-latest
+    env:
+      REGISTRY: ghcr.io
+      CONTAINER_NAME: lum # Имя контейнера на сервере
+
+    steps:
+      - name: Downcase REPO
+        run: |
+          echo "IMAGE_NAME=${GITHUB_REPOSITORY,,}" >>${GITHUB_ENV}
+
+      - name: Deploy to Server
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.SERVER_IP }}
+          username: ${{ secrets.SERVER_USERNAME }}
+          password: ${{ secrets.SERVER_PASSWORD }}
+          script: |
+            # Логин в GitHub Container Registry
+            echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
+            # Проверка и остановка существующего контейнера
+            if docker ps -a | grep -q "${{ env.CONTAINER_NAME }}"; then
+              echo "Stopping and removing existing container..."
+              docker stop ${{ env.CONTAINER_NAME }}
+              docker rm ${{ env.CONTAINER_NAME }}
+            else
+              echo "No existing container found"
+            fi
+
+            # Проверка и удаление существующего образа
+            if docker image ls | grep -q "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}"; then
+              echo "Removing existing image..."
+              docker image rm ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+            else
+              echo "No existing image found"
+            fi
+
+            # Загрузка нового образа
+            echo "Pulling new image..."
+            docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+
+            # Запуск нового контейнера
+            echo "Starting new container..."
+            docker run -d \
+              --name ${{ env.CONTAINER_NAME }} \
+              --restart unless-stopped \
+              -e DS_TOKEN=${{ secrets.DS_TOKEN }} \
+              ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+
+            # Очистка неиспользуемых образов
+            echo "Cleaning up unused images..."
+            docker image prune -f
+
+            # Выход из registry
+            docker logout ${{ env.REGISTRY }}
