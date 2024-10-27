@@ -1,14 +1,10 @@
 FROM alpine:latest AS base
 
-ENV PATH="/root/.cargo/bin:${PATH}"
+# ENV PATH="/root/.cargo/bin:${PATH}"
+
 ENV CARGO_NET_GIT_FETCH_WITH_CLI=true
 ENV CARGO_HTTP_MULTIPLEXING=false
 ENV RUST_TARGET=x86_64-unknown-linux-musl
-ENV RUSTFLAGS="-C target-feature=+crt-static"
-ENV CC="gcc"
-ENV AR="ar"
-ENV CFLAGS="-I/usr/include"
-ENV LDFLAGS="-L/usr/lib"
 ENV PKG_CONFIG_ALLOW_CROSS=1
 ENV OPENSSL_STATIC=1
 ENV OPENSSL_DIR=/usr
