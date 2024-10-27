@@ -74,7 +74,7 @@ jobs:
             maintainer=towinok
 
       - name: Build and push Docker image
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           context: .
           push: true
@@ -84,6 +84,8 @@ jobs:
           build-args: |
             TARGETARCH=amd64
             RUST_TARGET=x86_64-unknown-linux-musl
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
       - name: Verify push
         run: |
