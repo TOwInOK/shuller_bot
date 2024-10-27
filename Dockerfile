@@ -44,7 +44,7 @@ RUN cargo build --release --target ${RUST_TARGET}
 FROM alpine:latest
 WORKDIR /app
 RUN apk add --no-cache ca-certificates openssl
-COPY --from=builder /app/target/${RUST_TARGET}/release/shuller_bot .
+COPY --from=builder /app/target/release/shuller_bot .
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 USER appuser
 CMD ["./shuller_bot"]
