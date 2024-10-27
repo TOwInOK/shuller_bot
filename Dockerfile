@@ -47,5 +47,9 @@ WORKDIR /app
 RUN apk add --no-cache ca-certificates openssl
 # Changed path to include the target architecture
 COPY --from=builder /app/target/x86_64-unknown-linux-musl/release/shuller_bot .
-RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup \
+    && chown appuser:appgroup /app/shuller_bot \
+    && chmod +x /app/shuller_bot
 USER appuser
+
+CMD ["./shuller_bot"]
