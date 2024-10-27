@@ -1,16 +1,16 @@
 FROM alpine:latest AS base
 
-# ENV PATH="/root/.cargo/bin:${PATH}"
+ENV PATH="/root/.cargo/bin:${PATH}"
+ENV RUST_TARGET=x86_64-unknown-linux-musl
 
 # ENV CARGO_NET_GIT_FETCH_WITH_CLI=true
 # ENV CARGO_HTTP_MULTIPLEXING=false
-ENV RUST_TARGET=x86_64-unknown-linux-musl
 # ENV PKG_CONFIG_ALLOW_CROSS=1
 # ENV OPENSSL_STATIC=1
 # ENV OPENSSL_DIR=/usr
 
 RUN apk add --no-cache \
-build-base \
+    build-base \
     musl-dev \
     openssl-dev \
     openssl-libs-static \
