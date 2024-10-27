@@ -1,4 +1,3 @@
-ARG TARGETARCH
 FROM alpine:latest AS base
 
 RUN apk add --no-cache \
@@ -30,7 +29,7 @@ RUN mkdir src && \
     cargo chef prepare --recipe-path recipe.json
 
 # Сборка для AMD64
-FROM base AS builder-amd64
+FROM base AS builder
 WORKDIR /app
 RUN rustup target add x86_64-unknown-linux-musl
 ENV RUST_TARGET=x86_64-unknown-linux-musl
@@ -40,33 +39,11 @@ RUN cargo chef cook --target ${RUST_TARGET} --recipe-path recipe.json
 COPY . .
 RUN cargo build --release --target ${RUST_TARGET}
 
-# Сборка для ARM64
-FROM base AS builder-arm64
-WORKDIR /app
-RUN rustup target add aarch64-unknown-linux-musl
-ENV RUST_TARGET=aarch64-unknown-linux-musl
-
-COPY --from=planner /app/recipe.json recipe.json
-RUN cargo chef cook --target ${RUST_TARGET} --recipe-path recipe.json
-COPY . .
-RUN cargo build --release --target ${RUST_TARGET}
-
-# Финальный образ для AMD64
-FROM alpine:latest AS final-amd64
+# Финальный образ
+FROM alpine:latest
 WORKDIR /app
 RUN apk add --no-cache ca-certificates openssl
-COPY --from=builder-amd64 /app/target/x86_64-unknown-linux-musl/release/shuller_bot .
+COPY --from=builder /app/target/x86_64-unknown-linux-musl/release/shuller_bot .
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 USER appuser
 CMD ["./shuller_bot"]
-
-# Финальный образ для ARM64
-FROM alpine:latest AS final-arm64
-WORKDIR /app
-RUN apk add --no-cache ca-certificates openssl
-COPY --from=builder-arm64 /app/target/aarch64-unknown-linux-musl/release/shuller_bot .
-RUN addgroup -S appgroup && adduser -S appuser -G appgroup
-USER appuser
-CMD ["./shuller_bot"]
-
-FROM final-${TARGETARCH}

@@ -36,7 +36,7 @@ jobs:
         uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
           toolchain: stable
-          target: x86_64-unknown-linux-musl, aarch64-unknown-linux-musl
+          target: x86_64-unknown-linux-musl
           components: rustfmt, clippy
           cache: true
 
@@ -52,15 +52,6 @@ jobs:
   docker-build:
     needs: rust-checks
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        platform:
-          - os: linux/amd64
-            arch: amd64
-            target: x86_64-unknown-linux-musl
-          - os: linux/arm64
-            arch: arm64
-            target: aarch64-unknown-linux-musl
     env:
       REGISTRY: ghcr.io
 
@@ -71,9 +62,6 @@ jobs:
       - name: Downcase REPO
         run: |
           echo "IMAGE_NAME=${GITHUB_REPOSITORY,,}" >>${GITHUB_ENV}
-
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -93,10 +81,10 @@ jobs:
           tags: |
             type=ref,event=branch
             type=ref,event=tag
-            type=raw,value=latest-${{ matrix.platform.arch }}
-            type=sha,format=short,suffix=-${{ matrix.platform.arch }}
+            type=raw,value=latest
+            type=sha,format=short
           flavor: |
-            latest=false
+            latest=true
           labels: |
             org.opencontainers.image.title=shuller-bot
             org.opencontainers.image.description=Anime picture fetcher bot
@@ -111,61 +99,15 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          platforms: ${{ matrix.platform.os }}
-          target: final-${{ matrix.platform.arch }}
+          platforms: linux/amd64
+          target: final-amd64
           build-args: |
-            TARGETARCH=${{ matrix.platform.arch }}
-            RUST_TARGET=${{ matrix.platform.target }}
-          cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache-${{ matrix.platform.arch }}
-          cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache-${{ matrix.platform.arch }},mode=max
+            TARGETARCH=amd64
+            RUST_TARGET=x86_64-unknown-linux-musl
+          cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache
+          cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache,mode=max
 
       - name: Verify push
         run: |
-          docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest-${{ matrix.platform.arch }}
-          docker image inspect ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest-${{ matrix.platform.arch }}
-
-  create-manifest:
-    needs: docker-build
-    runs-on: ubuntu-latest
-    env:
-      REGISTRY: ghcr.io
-    steps:
-      - name: Downcase REPO
-        run: |
-          echo "IMAGE_NAME=${GITHUB_REPOSITORY,,}" >>${GITHUB_ENV}
-
-      - name: Login to Container Registry
-        uses: docker/login-action@v3
-        with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Create and push manifest
-        run: |
-          # Проверяем наличие образов
-          docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest-amd64
-          docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest-arm64
-
-          MANIFEST_TAG="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest"
-
-          echo "Creating manifest for $MANIFEST_TAG"
-
-          # Создаем и пушим манифест
-          docker manifest create $MANIFEST_TAG \
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest-amd64 \
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest-arm64
-
-          docker manifest annotate $MANIFEST_TAG \
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest-amd64 \
-            --os linux --arch amd64
-
-          docker manifest annotate $MANIFEST_TAG \
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest-arm64 \
-            --os linux --arch arm64
-
-          echo "Pushing manifest"
-          docker manifest push $MANIFEST_TAG
-
-          echo "Verifying manifest"
-          docker manifest inspect $MANIFEST_TAG
+          docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+          docker image inspect ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
